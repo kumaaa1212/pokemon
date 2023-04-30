@@ -1,22 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { Card } from './component/card/Card';
 import { Navbar } from './component/Navbar/Navbar';
 import { getAllPokemon, getPokemon } from './utils/pokenmon';
 function App() {
   const initialURL = 'https://pokeapi.co/api/v2/pokemon';
+  const allURL = 'https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0';
   const [loading,setloading] = useState(true);
-  const [pokemonDate,setpokemondate] =useState([])
-  const [nextURL,setnextURL] =useState('')
-  const [prevURL,setprevURL] =useState('')
+  const [pokemonDate,setpokemondate] =useState([]);
+  const [nextURL,setnextURL] =useState('');
+  const [prevURL,setprevURL] =useState('');
+  const [pokeName,setPokename] =useState([]); 
   useEffect(() =>{
     const fetchPokemonDate = async() =>{
        let res = await getAllPokemon(initialURL);
-      console.log(res)
-      loadPokemon(res.results);
-      setnextURL(res.next)
-      setprevURL(res.previous)
-       setloading(false);
+       let allres = await getAllPokemon(allURL);
+      await loadPokemon(res.results);
+      setPokename(allres.results);
+      setnextURL(res.next);
+      setprevURL(res.previous);
+      setloading(false);
     }
     fetchPokemonDate();
   },[])
@@ -33,7 +36,7 @@ let date = await getAllPokemon(nextURL);
 await loadPokemon(date.results);
 setnextURL(date.next);
 setprevURL(date.previous);
-setloading(false)
+setloading(false);
 }
 const handlePrev =async () =>{
 if(!prevURL)return;
@@ -44,13 +47,23 @@ setnextURL(date.next);
 setprevURL(date.previous);
 setloading(false);
 }
-
+const SearchPokemon =(data) =>{  
+  loadPokemon(pokeName.filter(obj => data.some(char => obj.name.includes(char))))
+}
+const handleSerch = (e) =>{
+  const pokeNames = pokeName.map((data) =>data.name);
+  const pokeNameresult = pokeNames.filter((itemName) =>
+  itemName.toLowerCase().includes(e.target.value.toLowerCase())
+  )
+  SearchPokemon(pokeNameresult);
+}
   return (
     <>
     <Navbar/>
     <div className="App">
       {loading ? (<h1>ロード中</h1>):
     ( <>
+     <input type="text" onChange={handleSerch} />
     <div className="pokemonCardContainer">
       {pokemonDate.map((pokemon,i) =>{
         return<Card key={i} pokemon={pokemon}/>
